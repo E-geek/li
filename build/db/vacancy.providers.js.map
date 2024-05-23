@@ -1,0 +1,1 @@
+{"version":3,"file":"vacancy.providers.js","sourceRoot":"","sources":["../../src/db/vacancy.providers.ts"],"names":[],"mappings":";;;AAGa,QAAA,gBAAgB,GAAG;IAC9B;QACE,OAAO,EAAE,oBAAoB;QAC7B,UAAU,EAAE,UAAC,UAAsB,IAAK,OAAA,UAAU,CAAC,aAAa,CAAC,iBAAO,CAAC,EAAjC,CAAiC;QACzE,MAAM,EAAE,CAAE,aAAa,CAAE;KAC1B;CACF,CAAC"}
