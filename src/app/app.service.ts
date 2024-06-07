@@ -13,11 +13,24 @@ export interface IVacanciesList {
   sortDirection :null | 'asc' | 'desc';
 }
 
+export interface IDescAttribute {
+  type :{$type :string};
+  start :number;
+  length :number;
+}
+
 export interface IVacancyShortMeta {
   vid :string;
   title :string;
   lid :number;
   applies :number;
+  views :number;
+  description :string;
+  descMeta :IDescAttribute[];
+  isEasyApply :boolean;
+  expireAt :number;
+  publishedAt :number;
+  origPublishAt :number;
 }
 
 export interface IVacanciesListResponse {
@@ -63,7 +76,7 @@ export class AppService {
       let order :string = null;
       switch (param.order) {
         case 'date':
-          order = '`updatedDate`';
+          order = '"updatedDate"';
           break;
         case 'applies':
           order = "`meta`->'source'->'applies'";
@@ -73,18 +86,38 @@ export class AppService {
           break;
       }
       if (order) {
-        const dir = (param.sortDirection ?? 'asc').toUpperCase() as 'ASC'|'DESC';
-        query.addOrderBy(order, dir, 'NULLS LAST');
+        const dir = (param.sortDirection ?? 'desc').toUpperCase() as ('ASC'|'DESC');
+        query.addOrderBy(order, dir);
       }
     }
     const list :Vacancy[] = await query.getRawMany();
 
-    const output :IVacanciesListResponse['data'] = list.map((v) => {
+    const output :IVacancyShortMeta[] = list.map((v) => {
+      const source = v.meta?.source ?? {
+        applies: -1,
+        views: -1,
+        description: {
+          attributes: [],
+        },
+        expireAt: null,
+        listedAt: null,
+        originalListedAt: null,
+        applyMethod: {
+          easyApplyUrl: null,
+        }
+      }
       return {
         vid: v.vid,
         title: v.title,
         lid: v.lid,
-        applies: v.meta?.source?.applies ?? -1,
+        applies: source.applies ?? -1,
+        views: source.views ?? -1,
+        description: v.description,
+        descMeta: source.description.attributes,
+        expireAt: source.expireAt,
+        publishedAt: source.listedAt,
+        origPublishAt: source.originalListedAt,
+        isEasyApply: !!source.applyMethod?.easyApplyUrl,
       };
     });
     return { data: output };

@@ -14,7 +14,6 @@
       "sourceMap": true,
       "paths": {
          "@/*": ["./src/*"]
-      },
-   },
-   "exclude": ["./example/*"]
+      }
+   }
 }
