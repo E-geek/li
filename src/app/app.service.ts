@@ -1,9 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Vacancy } from '@/entity/Vacancy';
 import {
   IsNull,
   Repository,
 } from 'typeorm';
+import { Vacancy } from '@/entity/Vacancy';
+import { IDescAttribute } from "@/entity/Job";
 
 export interface IVacanciesList {
   start :number;
@@ -11,12 +12,6 @@ export interface IVacanciesList {
   search :string | null;
   order :null | 'date' | 'applies' | 'lid';
   sortDirection :null | 'asc' | 'desc';
-}
-
-export interface IDescAttribute {
-  type :{$type :string};
-  start :number;
-  length :number;
 }
 
 export interface IVacancyShortMeta {

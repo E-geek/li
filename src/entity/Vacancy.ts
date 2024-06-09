@@ -3,10 +3,11 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  UpdateDateColumn, Index,
 } from 'typeorm';
 
 @Entity()
+@Index([ 'updatedDate', 'lid' ])
 export class Vacancy {
   @PrimaryGeneratedColumn('uuid')
   vid :string;
