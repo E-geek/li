@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {Inject, Injectable, Logger} from '@nestjs/common';
 import {
   IsNull,
   Repository,
 } from 'typeorm';
 import { Vacancy } from '@/entity/Vacancy';
-import { IDescAttribute } from "@/entity/Job";
+import {IVacancyShortMeta} from "@/interfaces/api";
+import {Job} from "@/entity/Job";
 
 export interface IVacanciesList {
   start :number;
@@ -14,29 +15,22 @@ export interface IVacanciesList {
   sortDirection :null | 'asc' | 'desc';
 }
 
-export interface IVacancyShortMeta {
-  vid :string;
-  title :string;
-  lid :number;
-  applies :number;
-  views :number;
-  description :string;
-  descMeta :IDescAttribute[];
-  isEasyApply :boolean;
-  expireAt :number;
-  publishedAt :number;
-  origPublishAt :number;
-}
-
 export interface IVacanciesListResponse {
   data :IVacancyShortMeta[];
 }
 
+const R_C = /\W-c#\W/i;
+const R_NET = /\W-\.net\W/i
+
 @Injectable()
 export class AppService {
+  private readonly logger = new Logger(AppService.name);
+
   constructor(
     @Inject('VACANCY_REPOSITORY')
     private vacancyRepository :Repository<Vacancy>,
+    @Inject('JOB_REPOSITORY')
+    private jobRepository :Repository<Job>,
   ) {}
 
   getHello() :string {
@@ -50,71 +44,73 @@ export class AppService {
       return null;
     }
     const query = this
-      .vacancyRepository
+      .jobRepository
       .manager
       .createQueryBuilder()
       .select('*')
-      .from(subQuery => {
-        return subQuery
-          .select('*')
-          .addSelect('ROW_NUMBER() OVER (PARTITION BY lid ORDER BY "createdDate")', 'rn')
-          .from('vacancy', 'vacancy');
-      }, 'uv')
-      .where('rn = 1')
+      .from(Job, 'job')
       .take(length)
       .offset(start)
-
+    ;
+    const exclude :RegExp[] = [];
     if (param.search) {
-      query.andWhere('(title ILIKE :search OR description ILIKE :search)', { search: `%${param.search}%` });
+      let search = ` ${param.search} `;
+      if (R_C.test(search)) {
+        search = search.replace(R_C, ' ');
+        exclude.push(/\Wc#\W/);
+      }
+      if (R_NET.test(search)) {
+        search = search.replace(R_NET, ' ');
+        exclude.push(/\W\.net\W/);
+      }
+      query
+        .where("to_tsvector('english', job.title) @@ websearch_to_tsquery(:search)", { search })
+        .orWhere("to_tsvector('english', job.description) @@ websearch_to_tsquery(:search)", { search })
+      ;
     }
     if (param.order) {
-      let order :string = null;
+      const sort = param.sortDirection === 'asc' ? 'ASC' : 'DESC';
       switch (param.order) {
-        case 'date':
-          order = '"updatedDate"';
-          break;
-        case 'applies':
-          order = "`meta`->'source'->'applies'";
-          break;
         case 'lid':
-          order = '`lid`';
+        case 'applies':
+          query.orderBy(`"${param.order}"`, sort, 'NULLS LAST');
           break;
-      }
-      if (order) {
-        const dir = (param.sortDirection ?? 'desc').toUpperCase() as ('ASC'|'DESC');
-        query.addOrderBy(order, dir);
+        case 'date':
+          query.orderBy('"publishedAt"', sort, 'NULLS LAST');
       }
     }
-    const list :Vacancy[] = await query.getRawMany();
+    const list :Job[] = await query.getRawMany();
+    this.logger.debug(`get ${list.length} rows`);
 
-    const output :IVacancyShortMeta[] = list.map((v) => {
-      const source = v.meta?.source ?? {
-        applies: -1,
-        views: -1,
-        description: {
-          attributes: [],
-        },
-        expireAt: null,
-        listedAt: null,
-        originalListedAt: null,
-        applyMethod: {
-          easyApplyUrl: null,
+    const output = [];
+    for (const v of list) {
+      if (exclude.length > 0) {
+        const fullText = ' ' + v.title + ' ' + v.description + ' ';
+        let skip = false;
+        for (const r of exclude) {
+          if (r.test(fullText)) {
+            skip = true;
+            break;
+          }
+        }
+        if (skip) {
+          continue;
         }
       }
-      return {
-        vid: v.vid,
-        title: v.title,
+      output.push({
+        jid: v.jid,
         lid: v.lid,
-        applies: source.applies ?? -1,
-        views: source.views ?? -1,
-        description: v.description,
-        descMeta: source.description.attributes,
-        expireAt: source.expireAt,
-        publishedAt: source.listedAt,
-        origPublishAt: source.originalListedAt,
-        isEasyApply: !!source.applyMethod?.easyApplyUrl,
-      };
-    });
+        title: v.meta.title,
+        description: v.meta.description,
+        descMeta: v.meta.descMeta,
+        applies: v.applies,
+        views: v.views,
+        expireAt: v.expireAt?.getTime() ?? 0,
+        publishedAt: v.publishedAt?.getTime() ?? 0,
+        origPublishAt: v.origPublishAt?.getTime() ?? 0,
+        isEasyApply: v.isEasyApply,
+      });
+    }
     return { data: output };
   }
 

@@ -5,8 +5,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn, Index,
 } from 'typeorm';
+import {JsonMap} from "@/interfaces/json";
 
-export interface IDescAttribute {
+export interface IDescAttribute extends JsonMap {
   type :{$type :string};
   start :number;
   length :number;
