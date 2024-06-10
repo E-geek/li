@@ -8,7 +8,7 @@
    "scripts": {
       "build": "nest build",
       "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-      "start": "node -r tsconfig-paths/register -r ts-node/register src/main.ts --max-http-header-size=80000",
+      "start": "node --max-http-header-size=80000 -r tsconfig-paths/register -r ts-node/register src/main.ts --max-http-header-size=80000",
       "start:dev": "nest start --watch --exec 'node --max-http-header-size=80000 -r tsconfig-paths/register -r ts-node/register ./src/main.ts'",
       "start:debug": "nest start --debug --watch",
       "start:prod": "node --max-http-header-size=80000 build/main",
@@ -38,7 +38,7 @@
       "@nestjs/testing": "^10.0.0",
       "@types/express": "^4.17.17",
       "@types/jest": "^29.5.2",
-      "@types/node": "^20.12.12",
+      "@types/node": "20.14.2",
       "@types/supertest": "^6.0.0",
       "@typescript-eslint/eslint-plugin": "^6.0.0",
       "@typescript-eslint/parser": "^6.0.0",
@@ -50,10 +50,10 @@
       "source-map-support": "^0.5.21",
       "supertest": "^6.3.3",
       "ts-jest": "^29.1.0",
-      "ts-loader": "^9.4.3",
-      "ts-node": "10.9.1",
-      "tsconfig-paths": "^4.2.0",
-      "typescript": "4.5.2"
+      "ts-loader": "9.5.1",
+      "ts-node": "10.9.2",
+      "tsconfig-paths": "4.2.0",
+      "typescript": "4.9.5"
    },
    "jest": {
       "moduleFileExtensions": [
