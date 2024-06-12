@@ -6,6 +6,7 @@ import {
   UpdateDateColumn, Index,
 } from 'typeorm';
 import {JsonMap} from "@/interfaces/json";
+import {IJobStatus} from "@/interfaces/api";
 
 export interface IDescAttribute extends JsonMap {
   type :{$type :string};
@@ -94,6 +95,13 @@ export class Job {
     default: null,
   })
   meta :IMetaJob;
+
+  @Column({
+    type: 'int2',
+    nullable: false,
+    default: 0,
+  })
+  status :IJobStatus;
 
   @CreateDateColumn({
     type: 'timestamptz',

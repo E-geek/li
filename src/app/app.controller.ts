@@ -9,6 +9,7 @@ import {
 import {AppService, IVacanciesList, IVacanciesListResponse} from './app.service';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import {IJobDoneRequest, IJobDoneResponse, IVacancyShortMeta} from "@/interfaces/api";
 
 @Controller()
 export class AppController {
@@ -40,6 +41,14 @@ export class AppController {
   @Post('add')
   async addVacancy(@Body() data) :Promise<any> {
     return await this.appService.addVacancy(data);
+  }
+
+  @Get('done')
+  async doneJob(
+    @Query('jid') jid :IJobDoneRequest['jid'],
+    @Query('status') status :IJobDoneRequest['status'],
+  ) :Promise<IJobDoneResponse> {
+    return await this.appService.doneJob(jid, status);
   }
 
   @Get('put/*.jpg')

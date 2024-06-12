@@ -11,7 +11,7 @@
       "start": "node --max-http-header-size=80000 -r tsconfig-paths/register -r ts-node/register src/main.ts --max-http-header-size=80000",
       "start:dev": "nest start --watch --exec 'node --max-http-header-size=80000 -r tsconfig-paths/register -r ts-node/register ./src/main.ts'",
       "start:debug": "nest start --debug --watch",
-      "start:prod": "node --max-http-header-size=80000 build/main",
+      "start:prod": "PRODUCTION=true node --max-http-header-size=80000 build/main",
       "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
       "test": "jest",
       "test:watch": "jest --watch",

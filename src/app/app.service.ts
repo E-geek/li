@@ -4,7 +4,7 @@ import {
   Repository,
 } from 'typeorm';
 import { Vacancy } from '@/entity/Vacancy';
-import {IVacancyShortMeta} from "@/interfaces/api";
+import {IJobDoneResponse, IJobStatus, IVacancyShortMeta} from "@/interfaces/api";
 import {Job} from "@/entity/Job";
 
 export interface IVacanciesList {
@@ -64,8 +64,10 @@ export class AppService {
         exclude.push(/\W\.net\W/);
       }
       query
-        .where("to_tsvector('english', job.title) @@ websearch_to_tsquery(:search)", { search })
-        .orWhere("to_tsvector('english', job.description) @@ websearch_to_tsquery(:search)", { search })
+        .where(`
+          to_tsvector('english', job.title) @@ websearch_to_tsquery(:search) 
+          OR to_tsvector('english', job.description) @@ websearch_to_tsquery(:search)
+          `, { search })
       ;
     }
     if (param.order) {
@@ -79,6 +81,8 @@ export class AppService {
           query.orderBy('"publishedAt"', sort, 'NULLS LAST');
       }
     }
+    query.andWhere('"status" = 0');
+    query.andWhere('"expireAt" > now()');
     const list :Job[] = await query.getRawMany();
     this.logger.debug(`get ${list.length} rows`);
 
@@ -109,6 +113,7 @@ export class AppService {
         publishedAt: v.publishedAt?.getTime() ?? 0,
         origPublishAt: v.origPublishAt?.getTime() ?? 0,
         isEasyApply: v.isEasyApply,
+        status: v.status,
       });
     }
     return { data: output };
@@ -153,5 +158,17 @@ export class AppService {
     }
     await Promise.all(transaction);
     return { status: 'ok', fixed: allBroken.length };
+  }
+
+  async doneJob(jid :string, status :IJobStatus) :Promise<IJobDoneResponse> {
+    const job = await this.jobRepository.findOne({where: {jid}});
+    if (!job) {
+      return {
+        error: 'Job not found',
+      };
+    }
+    job.status = status;
+    await this.jobRepository.save(job);
+    return {};
   }
 }

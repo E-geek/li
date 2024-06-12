@@ -8,7 +8,7 @@ export const AppDataSource = new DataSource({
   password: 'evro',
   database: 'li',
   synchronize: false,
-  logging: true,
+  logging: !process.env['PRODUCTION'],
   entities: [
     `${__dirname}/../entity/*.ts`,
     `${__dirname}/../entity/*.js`,
