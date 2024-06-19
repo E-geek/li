@@ -18,6 +18,7 @@ export interface IMetaJob {
   title :string;
   description :string;
   descMeta :IDescAttribute[];
+  translatedDescription ?:string|null;
 }
 
 @Entity()
@@ -67,6 +68,13 @@ export class Job {
   })
   isEasyApply :boolean;
 
+  @Column({
+    type: 'varchar',
+    length: 256,
+    nullable: true,
+    default: null,
+  })
+  source :string|null;
 
   @Column({
     type: 'timestamp without time zone',

@@ -2,18 +2,27 @@ import {
   Body,
   Controller,
   Get,
-  Header,
+  Header, HttpException, HttpStatus,
   Post,
   Query,
 } from '@nestjs/common';
 import {AppService, IVacanciesList, IVacanciesListResponse} from './app.service';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import {IJobDoneRequest, IJobDoneResponse, IVacancyShortMeta} from "@/interfaces/api";
+import {
+  IJobDoneRequest,
+  IJobDoneResponse,
+  ITranslateRequest, ITranslateResponseError,
+  ITranslateResponseOk,
+  IVacancyShortMeta
+} from "@/interfaces/api";
+import {IGenerateRequest} from "@/interfaces/llm";
+import {LlmService} from "@/app/llm/llm.service";
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService :AppService) {}
+  constructor(private readonly appService :AppService, private readonly llmService :LlmService) {
+  }
 
   @Get()
   getHello() :string {
@@ -66,5 +75,26 @@ export class AppController {
   @Get('fix')
   async fixVacancy() :Promise<any> {
     return await this.appService.fixVacancy();
+  }
+
+  @Post('translate')
+  async translate(@Body() data :ITranslateRequest) :Promise<ITranslateResponseOk> {
+    if (!data?.description) {
+      throw new HttpException({
+        error: 'Something went wrong',
+      } as unknown as ITranslateResponseError
+      , HttpStatus.BAD_REQUEST);
+    }
+    const translate = await this.llmService.translate(data.description);
+    if (translate == null) {
+      throw new HttpException({
+          error: 'Something went wrong',
+        } as unknown as ITranslateResponseError
+        , HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    await this.appService.saveTranslate(data.jid, translate);
+    return {
+      description: translate,
+    } as ITranslateResponseOk;
   }
 }

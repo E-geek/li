@@ -13,6 +13,8 @@ export interface IVacancyShortMeta extends JsonMap {
   title :string;
   description :string;
   descMeta :IDescAttribute[];
+  descHTML ?:string|null; // internal use
+  i18nHTML ?:string|null;
   applies :number;
   views :number;
   isEasyApply :boolean;
@@ -34,3 +36,19 @@ export interface IJobDoneResponseError extends IBaseResponse {
 }
 
 export type IJobDoneResponse = IResponseOkOrError<IJobDoneResponseOk, IJobDoneResponseError>;
+
+
+export interface ITranslateRequest extends JsonMap {
+  jid :string;
+  description :string;
+}
+
+export interface ITranslateResponseOk extends IBaseResponse {
+  description :string;
+}
+
+export interface ITranslateResponseError extends IBaseResponse {
+  error :'Someone went wrong',
+}
+
+export type ITranslateResponse = IResponseOkOrError<ITranslateResponseOk, ITranslateResponseError>;

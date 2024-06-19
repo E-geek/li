@@ -86,7 +86,7 @@ export class AppService {
     const list :Job[] = await query.getRawMany();
     this.logger.debug(`get ${list.length} rows`);
 
-    const output = [];
+    const output :IVacancyShortMeta[] = [];
     for (const v of list) {
       if (exclude.length > 0) {
         const fullText = ' ' + v.title + ' ' + v.description + ' ';
@@ -106,6 +106,7 @@ export class AppService {
         lid: v.lid,
         title: v.meta.title,
         description: v.meta.description,
+        i18nHTML: v.meta.translatedDescription,
         descMeta: v.meta.descMeta,
         applies: v.applies,
         views: v.views,
@@ -170,5 +171,11 @@ export class AppService {
     job.status = status;
     await this.jobRepository.save(job);
     return {};
+  }
+
+  async saveTranslate(jid :string, translate :string) :Promise<void> {
+    const job = await this.jobRepository.findOne({where: {jid}});
+    job.meta.translatedDescription = translate;
+    await this.jobRepository.save(job);
   }
 }

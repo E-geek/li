@@ -6,8 +6,11 @@ export type AnyFunction = (...args :any[]) =>any;
 export type IFunction<T> = (...args :any[]) =>T;
 export type ILangDict = { [P :string] :Record<string, string> };
 
-export interface IBaseResponse extends JsonMap {
-  message ?:string;
+export type IBaseRequest = JsonMap;
+
+export interface IBaseResponse {
+  error ?:string;
+  errors ?:(string|number)[];
   [key :string] :Json;
 }
 
